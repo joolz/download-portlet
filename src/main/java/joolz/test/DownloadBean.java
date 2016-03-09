@@ -1,10 +1,10 @@
 package joolz.test;
 
-import com.liferay.faces.portal.context.LiferayFacesContext;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -14,7 +14,6 @@ import java.nio.file.StandardOpenOption;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import javax.servlet.ServletContext;
 
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -25,25 +24,31 @@ public class DownloadBean {
 	private static final Log LOG = LogFactoryUtil.getLog(DownloadBean.class);
 	private static final String TEST_FILE = "download-test-";
 	private File tempFile;
-	private StreamedContent file;
+	private StreamedContent file = null;
 
 	@PostConstruct
 	public void init() {
 		try {
-			final LiferayFacesContext lfc = LiferayFacesContext.getInstance();
 			tempFile = File.createTempFile(TEST_FILE, null);
 			tempFile.deleteOnExit();
 			LOG.debug("Created tempfile " + tempFile.getCanonicalPath());
 			Files.write(Paths.get(tempFile.getCanonicalPath()), getTestContent().getBytes(), StandardOpenOption.APPEND);
-			final InputStream stream = ((ServletContext) lfc.getExternalContext().getContext())
-					.getResourceAsStream(tempFile.getCanonicalPath());
-			file = new DefaultStreamedContent(stream, "text/plain", tempFile.getName());
 		} catch (final IOException e) {
 			LOG.error(e);
 		}
 	}
 
 	public StreamedContent getFile() {
+		if (file == null) {
+			LOG.debug("file is null, get it");
+			try {
+				final InputStream stream = new FileInputStream(tempFile);
+				file = new DefaultStreamedContent(stream, "text/plain", tempFile.getName());
+			} catch (final IOException e) {
+				LOG.error(e);
+			}
+
+		}
 		return file;
 	}
 
