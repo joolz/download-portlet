@@ -10,10 +10,21 @@
 <h:head />
 
 <h:body>
-	<h:form>
-		<p:commandButton value="Download" ajax="false">
+	<h:form id="downloadForm">
+
+		<p:commandButton value="Prepare download" async="true"
+			action="#{downloadBean.doPrepare}" onclick="poller.start();"
+			rendered="#{not downloadBean.prepared}" />
+
+		<p:poll widgetVar="poller" interval="3"
+			listener="#{downloadBean.poller}" autoStart="false"
+			stop="#{downloadBean.stopPoll}" />
+
+		<p:commandButton widgetVar="downloadButton" value="Download"
+			ajax="false" rendered="#{downloadBean.prepared}">
 			<p:fileDownload value="#{downloadBean.file}" />
 		</p:commandButton>
+
 	</h:form>
 
 </h:body>
