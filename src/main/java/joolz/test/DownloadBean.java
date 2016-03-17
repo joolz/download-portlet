@@ -27,6 +27,7 @@ public class DownloadBean {
 	private boolean prepared = false;
 	private static final int FIVE_SECONDS = 1000 * 5;
 	private boolean stopPoll = false;
+	private int counter = 0;
 
 	public void doPrepare() {
 		try {
@@ -39,6 +40,7 @@ public class DownloadBean {
 			sb.append("Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?");
 			sb.append("\n\n");
 			for (int i = 0; i < 2; i++) {
+				setCounter(counter + 50);
 				final String append = i + "\n" + sb.toString();
 				Files.write(Paths.get(tempFile.getCanonicalPath()), append.getBytes(), StandardOpenOption.APPEND);
 				LOG.debug("Appended " + i + ", now sleep " + FIVE_SECONDS + " milliseconds");
@@ -75,8 +77,22 @@ public class DownloadBean {
 		}
 	}
 
+	public void handleComplete() {
+		LOG.debug("Progress complete");
+	}
+
 	public boolean isStopPoll() {
 		return stopPoll;
+	}
+
+	public void setCounter(final int counter) {
+		LOG.debug("Set counter to " + counter);
+		this.counter = counter;
+	}
+
+	public int getCounter() {
+		LOG.debug("Got counter " + counter);
+		return counter;
 	}
 
 }

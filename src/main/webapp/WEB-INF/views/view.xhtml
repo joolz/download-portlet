@@ -12,16 +12,24 @@
 <h:body>
 	<h:form id="downloadForm">
 
-		<p:commandButton value="Prepare download" async="true"
-			action="#{downloadBean.doPrepare}" onclick="poller.start();"
-			rendered="#{not downloadBean.prepared}" />
+		<!-- see viewItem.xhtml and CoursePlanView -->
 
-		<p:poll widgetVar="poller" interval="3"
+		<p:commandButton widgetVar="startButton" value="Prepare download"
+			async="true" action="#{downloadBean.doPrepare}"
+			onclick="pbAjax.start();startButton.disable();" />
+
+		<p:poll widgetVar="poller" interval="3" update="progressBar"
 			listener="#{downloadBean.poller}" autoStart="false"
 			stop="#{downloadBean.stopPoll}" />
 
-		<p:commandButton widgetVar="downloadButton" value="Download"
-			ajax="false" rendered="#{downloadBean.prepared}">
+		<p:progressBar widgetVar="pbAjax" id="progressBar" interval="100"
+			ajax="true" value="#{downloadBean.counter}">
+			<p:ajax event="complete" listener="#{downloadBean.handleComplete}"
+				update="downloadButton" />
+		</p:progressBar>
+
+		<p:commandButton id="downloadButton" value="Download"
+			disabled="#{not downloadBean.prepared}">
 			<p:fileDownload value="#{downloadBean.file}" />
 		</p:commandButton>
 
