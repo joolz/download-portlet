@@ -2,12 +2,12 @@ package joolz.test;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import javax.portlet.PortletException;
@@ -15,72 +15,53 @@ import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 import javax.portlet.faces.GenericFacesPortlet;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.transform.TransformerFactory;
 
-/**
- * Portlet implementation class ShowcasePortlet extends the generic faces
- * portlet and adds an PDF export option for showcases.
- *
- * @author hvo
- */
+import org.apache.commons.io.IOUtils;
+
 public class DownloadPortlet extends GenericFacesPortlet {
-        private static final Log LOG = LogFactoryUtil.getLog(DownloadPortlet.class);
-        private static final String EXPORT_ACTION = "showcase-export-format";
-        private static final String SHOWCASE_ID = "showcase-id";
+	private static final Log LOG = LogFactoryUtil.getLog(DownloadPortlet.class);
 
-        private static final String EXPORT_TO_PDF = "pdf";
+	@Override
+	public void serveResource(final ResourceRequest resourceRequest, final ResourceResponse resourceResponse)
+			throws PortletException, IOException {
 
-        // TODO check if objects are thread safe!
-        private final FopFactory fopFactory = FopFactory.newInstance();
-        private final TransformerFactory tFactory = TransformerFactory.newInstance();
+		LOG.debug("Custom serve resource");
 
-        // TODO have a close look at
-        // https://code.google.com/p/pdf-example/source/browse/trunk/src/main/java/comtech/pdf/PdfServlet.java?r=3
+		final String fileName = resourceRequest.getParameter("fileName");
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void serveResource(final ResourceRequest resourceRequest, final ResourceResponse resourceResponse)
-                        throws PortletException, IOException {
+		LOG.debug("Got filename " + fileName);
 
-                final String exportTypeAction = resourceRequest.getParameter(EXPORT_ACTION);
+		if (fileName != null && fileName.trim().length() > 0) {
 
-                if (EXPORT_TO_PDF.equals(exportTypeAction)) {
+			final HttpServletResponse servletResponse = PortalUtil.getHttpServletResponse(resourceResponse);
 
-                        final int showcaseId = GetterUtil.getInteger(resourceRequest.getParameter(SHOWCASE_ID), 0);
+			try {
+				// Setup a buffer to obtain the content length
+				final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-                        if (showcaseId > 0) {
+				// Prepare response
+				servletResponse.setStatus(HttpServletResponse.SC_OK);
+				servletResponse.setContentType("application/pdf");
+				servletResponse.setHeader("Content-Disposition", "attachment;filename=\"" + fileName + "\"");
+				servletResponse.setContentLength(out.size());
 
-                                final ThemeDisplay themeDisplay = (ThemeDisplay) resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
+				// Send content to Browser
+				final String tempdir = System.getProperty("java.io.tmpdir");
+				final BufferedInputStream input = new BufferedInputStream(new FileInputStream(tempdir + File.separator
+						+ fileName));
+				IOUtils.copy(input, servletResponse.getOutputStream());
 
-                                final HttpServletResponse servletResponse = PortalUtil.getHttpServletResponse(resourceResponse);
-
-                                try {
-                                        // Setup a buffer to obtain the content length
-                                        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-                                        PDFUtils.exportShowcaseToPDF(showcaseId, out, themeDisplay, getPortletContext());
-
-                                        // Prepare response
-                                        servletResponse.setStatus(HttpServletResponse.SC_OK);
-                                        servletResponse.setContentType("application/pdf");
-                                        servletResponse.setHeader("Content-Disposition", "attachment;filename=\"showcase.pdf\"");
-                                        servletResponse.setContentLength(out.size());
-
-                                        // Send content to Browser
-                                        servletResponse.getOutputStream().write(out.toByteArray());
-                                        servletResponse.getOutputStream().flush();
-
-                                } catch (final Exception e) {
-                                        LOG.error(e);
-                                        throw new IOException("Failed to generate: " + e.getMessage());
-                                }
-                        }
-                        return;
-                }
-                super.serveResource(resourceRequest, resourceResponse);
-        }
-
+			} catch (final Throwable e) {
+				LOG.error(e);
+				servletResponse.reset();
+				servletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				servletResponse.getWriter().append("Error generating document: " + e.getMessage());
+			} finally {
+				servletResponse.flushBuffer();
+			}
+			return;
+		}
+		super.serveResource(resourceRequest, resourceResponse);
+	}
 
 }

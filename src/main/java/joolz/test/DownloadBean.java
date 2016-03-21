@@ -1,12 +1,12 @@
 package joolz.test;
 
+import com.liferay.faces.portal.context.LiferayFacesContext;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -14,22 +14,19 @@ import java.nio.file.StandardOpenOption;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 
-import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.StreamedContent;
-
 @ManagedBean
 @ViewScoped
 public class DownloadBean {
 	private static final Log LOG = LogFactoryUtil.getLog(DownloadBean.class);
 	private static final String TEST_FILE = "download-test-";
 	private File tempFile;
-	private StreamedContent file = null;
-	private boolean prepared = false;
-	private static final int FIVE_SECONDS = 1000 * 5;
+	private boolean ready = false;
+	private static final int FIVE_SECONDS = 1; // 1000 * 5;
 	private boolean stopPoll = false;
 	private int counter = 0;
 
-	public void doPrepare() {
+	public String doGenerate() {
+		final LiferayFacesContext lfc = LiferayFacesContext.getInstance();
 		try {
 			tempFile = File.createTempFile(TEST_FILE, null);
 			tempFile.deleteOnExit();
@@ -47,32 +44,26 @@ public class DownloadBean {
 				Thread.sleep(FIVE_SECONDS);
 			}
 			LOG.debug("Preparation finished");
-			prepared = true;
+			ready = true;
+			lfc.addGlobalInfoMessage("Generated " + tempFile.getName());
 		} catch (final IOException | InterruptedException e) {
 			LOG.error(e);
+			lfc.addGlobalUnexpectedErrorMessage();
 		}
+		return StringPool.BLANK;
 	}
 
-	public boolean isPrepared() {
-		return prepared;
+	public File getTempFile() {
+		return tempFile;
 	}
 
-	public StreamedContent getFile() {
-		if (file == null) {
-			LOG.debug("file is null, get it");
-			try {
-				final InputStream stream = new FileInputStream(tempFile);
-				file = new DefaultStreamedContent(stream, "text/plain", "MyFile.txt");
-			} catch (final IOException e) {
-				LOG.error(e);
-			}
-		}
-		return file;
+	public boolean isReady() {
+		return ready;
 	}
 
 	public void poller() {
-		LOG.debug("poller called, prepared is " + prepared);
-		if (prepared) {
+		LOG.debug("poller called, prepared is " + ready);
+		if (ready) {
 			stopPoll = true;
 		}
 	}

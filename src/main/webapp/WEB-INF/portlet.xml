@@ -4,7 +4,7 @@
 	<portlet>
 		<portlet-name>download-portlet</portlet-name>
 		<display-name>download-portlet</display-name>
-		<portlet-class>javax.portlet.faces.GenericFacesPortlet</portlet-class>
+		<portlet-class>joolz.test.DownloadPortlet</portlet-class>
 		<init-param>
 			<name>javax.portlet.faces.defaultViewId.view</name>
 			<value>/WEB-INF/views/view.xhtml</value>
@@ -14,9 +14,6 @@
 			<mime-type>text/html</mime-type>
 			<portlet-mode>view</portlet-mode>
 		</supports>
-		<supported-locale>nl</supported-locale>
-		<supported-locale>en</supported-locale>
-		<resource-bundle>Language</resource-bundle>
 		<portlet-info>
 			<title>download-portlet</title>
 			<short-title>download-portlet</short-title>

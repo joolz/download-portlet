@@ -1,40 +1,39 @@
 <?xml version="1.0"?>
 
-<html xmlns="http://www.w3.org/1999/xhtml"
+<f:view xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	xmlns:f="http://xmlns.jcp.org/jsf/core"
 	xmlns:h="http://xmlns.jcp.org/jsf/html"
 	xmlns:p="http://primefaces.org/ui"
-	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:portlet="http://java.sun.com/portlet_2_0">
 
-<h:head />
+	<h:head />
+	<!-- see viewItem.xhtml and CoursePlanView -->
 
-<h:body>
-	<h:form id="downloadForm">
+	<h:body>
 
-		<!-- see viewItem.xhtml and CoursePlanView -->
+		<h:form>
 
-		<p:commandButton widgetVar="startButton" value="Prepare download"
-			async="true" action="#{downloadBean.doPrepare}"
-			onclick="pbAjax.start();startButton.disable();" />
+			<h:messages globalOnly="true" />
 
-		<p:poll widgetVar="poller" interval="3" update="progressBar"
-			listener="#{downloadBean.poller}" autoStart="false"
-			stop="#{downloadBean.stopPoll}" />
+			<p>
+				<h:commandButton value="generate tempFile"
+					action="#{downloadBean.doGenerate}"
+					disabled="#{downloadBean.ready}" />
+			</p>
 
-		<p:progressBar widgetVar="pbAjax" id="progressBar" interval="100"
-			ajax="true" value="#{downloadBean.counter}">
-			<p:ajax event="complete" listener="#{downloadBean.handleComplete}"
-				update="downloadButton" />
-		</p:progressBar>
+			<portlet:resourceURL var="resourceURL">
+				<portlet:param name="fileName" value="#{downloadBean.tempFile.name}" />
+			</portlet:resourceURL>
 
-		<p:commandButton id="downloadButton" value="Download"
-			disabled="#{not downloadBean.prepared}">
-			<p:fileDownload value="#{downloadBean.file}" />
-		</p:commandButton>
+			<p>
+				<h:outputLink value="#{resourceURL}"
+					disabled="#{not downloadBean.ready}">
+					<h:outputText value="download tempFile" />
+				</h:outputLink>
+			</p>
+		</h:form>
+	</h:body>
 
-	</h:form>
-
-</h:body>
-
-</html>
+</f:view>
