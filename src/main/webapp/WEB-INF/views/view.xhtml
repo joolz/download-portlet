@@ -23,6 +23,18 @@
 					disabled="#{downloadBean.ready}" />
 			</p>
 
+			<p>
+				<p:progressBar id="progressBar" widgetVar="pbAjax" ajax="true"
+					value="#{downloadBean.progress}" labelTemplate="{value}%"
+					styleClass="animated" global="false">
+					<p:ajax event="complete" oncomplete="PF('poller').disable()" />
+				</p:progressBar>
+
+				<p:poll widgetVar="poller" interval="3" update="progressBar"
+					listener="#{downloadBean.pollerListener}"
+					stop="#{downloadBean.pollerStopped}" />
+			</p>
+
 			<portlet:resourceURL var="resourceURL">
 				<portlet:param name="fileName" value="#{downloadBean.tempFile.name}" />
 			</portlet:resourceURL>
